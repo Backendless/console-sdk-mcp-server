@@ -2,10 +2,17 @@
   "name": "backendless-console-sdk-mcp-server",
   "version": "0.0.1",
   "description": "",
-  "main": "server/index.js",
+  "main": "src/index.js",
   "type": "module",
   "license": "MIT",
+  "bin": {
+    "backendless-dev-api-mcp": "./bin/stdio.js",
+    "backendless-dev-api-mcp-http": "./bin/http.js"
+  },
   "scripts": {
+    "start": "npm run start:stdio",
+    "start:stdio": "node ./bin/stdio.js",
+    "start:http": "node ./bin/http.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "homepage": "https://github.com/Backendless/console-sdk-mcp-server#readme",
@@ -25,5 +32,11 @@
   },
   "bugs": {
     "url": "https://support.backendless.com/"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.17.4",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "zod": "^3.24.4"
   }
 }
