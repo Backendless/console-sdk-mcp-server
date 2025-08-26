@@ -4,7 +4,7 @@ import crypto from 'crypto'
 import express from 'express'
 import cors from 'cors'
 
-import { initMCPServer } from './server/index.js'
+import { initMCPServer } from './server.js'
 
 const transports = {}
 

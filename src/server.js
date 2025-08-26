@@ -2,9 +2,9 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 
 import { registerTools } from './tools/index.js'
 
-export function initMCPServer(){
+export function initMCPServer() {
   const mcpServer = new McpServer({
-    name        : 'TestPersonsDB',
+    name        : 'Backendless Console SDK MCP Server',
     version     : '1.0.0',
     capabilities: {
       resources: {},

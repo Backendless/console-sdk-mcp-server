@@ -1,6 +1,6 @@
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 
-import { initMCPServer } from './server/index.js'
+import { initMCPServer } from './server.js'
 
 export async function startSTDIO() {
   const macServer = initMCPServer()

@@ -1,7 +1,10 @@
 #!/usr/bin/env node
 import { startSTDIO } from '../src/stdio.js'
+import { initConfig } from '../src/config.js'
 
 async function main() {
+  await initConfig()
+
   await startSTDIO()
 }
 
