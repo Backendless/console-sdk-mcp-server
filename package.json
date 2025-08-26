@@ -1,0 +1,29 @@
+{
+  "name": "backendless-console-sdk-mcp-server",
+  "version": "0.0.1",
+  "description": "",
+  "main": "server/index.js",
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "homepage": "https://github.com/Backendless/console-sdk-mcp-server#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Backendless/console-sdk-mcp-server.git"
+  },
+  "keywords": [
+    "backendless",
+    "sdk",
+    "ai",
+    "mcp-server"
+  ],
+  "author": {
+    "name": "Backendless Corp",
+    "email": "info@backendless.com"
+  },
+  "bugs": {
+    "url": "https://support.backendless.com/"
+  }
+}
