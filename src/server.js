@@ -2,7 +2,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 
 import { registerTools } from './tools/index.js'
 
-export function initMCPServer() {
+export async function initMCPServer() {
   const mcpServer = new McpServer({
     name        : 'Backendless Console SDK MCP Server',
     version     : '1.0.0',
@@ -12,7 +12,7 @@ export function initMCPServer() {
     },
   })
 
-  registerTools(mcpServer)
+  await registerTools(mcpServer)
 
   return mcpServer
 }

@@ -4,7 +4,7 @@ const store = [
   { name: 'Vlad', age: 35, city: 'Kiev' },
 ]
 
-export const testTools = [
+export default [
   {
     name           : 'loadPersons',
     description    : 'Load persons from the DB',

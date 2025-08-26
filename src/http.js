@@ -11,7 +11,7 @@ const transports = {}
 export async function startHTTP({ port }) {
   port = port || 3000
 
-  const macServer = initMCPServer()
+  const macServer = await initMCPServer()
 
   const app = express()
 

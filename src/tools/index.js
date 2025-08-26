@@ -1,8 +1,8 @@
-import { testTools } from './test.js'
-
-export function registerTools(mcpServer) {
+export async function registerTools(mcpServer) {
   const tools = [
-    ...testTools,
+    ...(await import('./test.js')).default,
+    ...(await import('./session-example.js')).default,
+    ...(await import('./sdk-example.js')).default,
   ]
 
   tools.forEach((tool) => {
@@ -13,8 +13,10 @@ export function registerTools(mcpServer) {
         tool.name,
         tool.description,
         tool.argumentsSchema,
-        async (...args) => {
-          const result = await tool.execution(...args)
+        async (args, meta) => {
+          const sessionId = meta.sessionId
+
+          const result = await tool.execution(args, sessionId, meta)
 
           if (typeof result === 'string') {
             return {
