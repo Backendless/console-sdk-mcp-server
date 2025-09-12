@@ -1,52 +1,70 @@
-import { paramsToZodSchema } from './composer.js'
+import { buildDescription, paramsToZodSchema } from './composer.js'
 import { provideSDKClientSession } from '../console-sdk/index.js'
-// import definition from 'backendless-console-sdk/definitions.json' with { type: 'json' }
-import { testDef } from './testdef.js'
 
-const preparedTools = []
 
-testDef.forEach(service => {
+async function loadDefinitions() {
+  try {
+    const { default: definitions } = await import('backendless-console-sdk/definitions.json', { with: { type: 'json' } })
+
+    return Array.isArray(definitions) ? definitions : []
+  } catch (error) {
+    console.warn('Failed to load SDK definitions:', error.message)
+    return []
+  }
+}
+
+function createTool(service, method) {
   const { serviceName } = service.serviceInfo
+  const { methodLabel: toolLabel, methodName: toolName, category, description, params, sampleResult } = method
 
-  service.methods.forEach(method => {
-    const toolLabel = method.methodLabel
-    const toolName = method.methodName
-    const category = method.category
+  const enhancedDescription = buildDescription(description, toolName, serviceName, sampleResult)
 
-    if (!toolName || !serviceName) {
-      return
+  return {
+    name           : toolLabel,
+    description    : enhancedDescription,
+    argumentsSchema: paramsToZodSchema(params),
+    _meta          : { category }, // we also can add components, etc. just for FR.
+    execution      : async (args, sessionId, meta) => {
+      const sdkClient = provideSDKClientSession(sessionId, meta)
+      const sdkMethod = sdkClient[serviceName]?.[toolName]?.bind(sdkClient[serviceName])
+
+      if (typeof sdkMethod !== 'function') {
+        throw new Error(`Tool ${ toolName } not found for service ${ serviceName }`)
+      }
+
+      const methodParams = params || []
+      const argsArray = methodParams.map(param => args[param.name])
+      const result = await sdkMethod(...argsArray)
+
+      return JSON.stringify(result)
+    }
+  }
+}
+
+const definition = await loadDefinitions()
+
+const preparedTools = definition.reduce((tools, service) => {
+  if (!service?.serviceInfo?.serviceName || !Array.isArray(service.methods)) {
+    return tools
+  }
+
+  const serviceName = service.serviceInfo.serviceName
+
+  return service.methods.reduce((acc, method) => {
+    if (!method?.methodName || !method?.methodLabel) {
+      return acc
     }
 
-    preparedTools.push({
-      name           : toolLabel,
-      description    : method.description,
-      argumentsSchema: paramsToZodSchema(method.params),
-      _meta          : { category },
-      // need to find a solution to save category in tool, already this field ignored by mcp protocol
-      execution      : async (args, sessionId, meta) => {
-        const sdkClient = provideSDKClientSession(sessionId, meta)
+    try {
+      acc.push(createTool(service, method))
+    } catch (error) {
+      console.warn(`Failed to create tool for ${ serviceName }.${ method.methodName }:`, error.message)
+    }
 
-        const sdkMethod = sdkClient[serviceName]?.[toolName]?.bind(sdkClient[serviceName])
+    return acc
+  }, tools)
+}, [])
 
-        if (typeof sdkMethod !== 'function') {
-          throw new Error(`Method ${ toolName } not found for service ${ serviceName } `)
-        }
-
-        const methodParams = method.params || []
-
-        console.log('methodParams', methodParams)
-        console.log('args', args)
-        const argsArray = methodParams.map(param => args[param.name])
-
-        console.log('argsArray', argsArray)
-
-        const result = await sdkMethod(...argsArray)
-
-        return JSON.stringify(result)
-      }
-    })
-  })
-})
 
 export default [
   ...preparedTools,

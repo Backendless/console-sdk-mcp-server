@@ -7,7 +7,7 @@ export function provideSDKClientSession(sessionId = 'default-stdio', meta) {
   const authKey = getRequestAuthorization(meta)
 
   if (!sessions[sessionId]) {
-    sessions[sessionId] = createClient('http://localhost:3001', authKey)
+    sessions[sessionId] = createClient(Config.blConsoleURL, authKey)
   }
 
   return sessions[sessionId]

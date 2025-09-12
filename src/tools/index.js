@@ -4,6 +4,8 @@ export async function registerTools(mcpServer) {
     ...(await import('./sdk.js')).default,
   ]
 
+  console.log(`Server started with ${tools.length} tools`)
+
   tools.forEach((tool) => {
     if (typeof tool === 'function') {
       tool(mcpServer)

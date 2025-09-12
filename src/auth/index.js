@@ -19,9 +19,8 @@ function generateOAuthConfig() {
       'authorization_code',
     ],
     'token_endpoint_auth_methods_supported': [
-      // Config.auth2MethodAuthorization,
-      // 'client_secret_post',
       'client_secret_basic',
+      // 'client_secret_post',
       // 'none'
     ],
     'code_challenge_methods_supported'     : [
