@@ -5,11 +5,12 @@ import express from 'express'
 import cors from 'cors'
 
 import { initMCPServer } from './server.js'
+import { handleOAuthServerMetadata } from './auth/index.js'
 
 const transports = {}
 
 export async function startHTTP({ port }) {
-  port = port || 3000
+  port = port || 3003
 
   const macServer = await initMCPServer()
 
@@ -19,22 +20,31 @@ export async function startHTTP({ port }) {
     origin: '*', // Configure appropriately for production, for example:
     // origin: ['https://your-remote-domain.com', 'https://your-other-remote-domain.com'],
     exposedHeaders: ['Mcp-Session-Id'],
-    allowedHeaders: ['Content-Type', 'mcp-session-id'],
+    allowedHeaders: ['Content-Type', 'mcp-session-id', 'authorization', 'authKey', 'mcp-protocol-version'],
   }))
 
   app.use(express.json())
 
-// Handle POST requests for client-to-server communication
-  app.post('/mcp', async (req, res) => {
-    // Check for existing session ID
+  app.get('/.well-known/oauth-protected-resource', (req, res) => {
+    res.json({
+      resource_server: 'localhost:3003', // todo change it with proxy to blConsoleURL
+      scopes_supported: [],
+      bearer_methods_supported: ["header"],
+      resource_documentation: "MCP Server OAuth Protected Resource",
+      mcp_endpoint: `http://localhost:${port}/mcp` // todo change it with proxy to blConsoleURL
+    })
+  })
+
+  app.get('/.well-known/oauth-authorization-server', handleOAuthServerMetadata)
+
+  app.post('/mcp', requireAuth(), async (req, res) => {
+
     const sessionId = req.headers['mcp-session-id']
     let transport
 
     if (sessionId && transports[sessionId]) {
-      // Reuse existing transport
       transport = transports[sessionId]
     } else if (!sessionId && isInitializeRequest(req.body)) {
-      // New initialization request
       transport = new StreamableHTTPServerTransport({
         sessionIdGenerator  : () => crypto.randomUUID(),
         onsessioninitialized: (sessionId) => {
@@ -88,11 +98,35 @@ export async function startHTTP({ port }) {
     await transport.handleRequest(req, res)
   }
 
-// Handle GET requests for server-to-client notifications via SSE
-  app.get('/mcp', handleSessionRequest)
-
 // Handle DELETE requests for session termination
-  app.delete('/mcp', handleSessionRequest)
+  app.delete('/mcp', requireAuth(), handleSessionRequest)
+
+  function requireAuth() {
+    return (req, res, next) => {
+      const authKeyHeader = req.headers['authkey']
+      const authorizationHeader = req.headers['authorization']
+
+      if (!authKeyHeader && !authorizationHeader) {
+        res.set('WWW-Authenticate', `Bearer resource_metadata="http://localhost:3003/.well-known/oauth-protected-resource"`)
+
+        if (req.method === 'POST') {
+          res.status(401).json({
+            jsonrpc: '2.0',
+            error  : {
+              code   : -32001,
+              message: 'Authentication required. Use "authkey" header for Backendless authKey or Authorization: Bearer token for OAuth'
+            },
+            id     : null,
+          })
+        } else {
+          res.status(401).send('Authentication required')
+        }
+        return
+      }
+
+      next()
+    }
+  }
 
   app.listen(port, () => {
     console.log(`🚀 Streamable MCP server running at http://localhost:${ port }/mcp`)
