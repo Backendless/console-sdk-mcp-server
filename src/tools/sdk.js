@@ -1,4 +1,3 @@
-import { testdef } from 'tools/testdef.js'
 import { paramsToZodSchema } from './composer.js'
 import { provideSDKClientSession } from '../console-sdk/index.js'
 // import definition from 'backendless-console-sdk/definitions.json' with { type: 'json' }
