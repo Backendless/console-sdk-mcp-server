@@ -1,10 +1,12 @@
+import { testdef } from 'tools/testdef.js'
 import { paramsToZodSchema } from './composer.js'
 import { provideSDKClientSession } from '../console-sdk/index.js'
-import definition from 'backendless-console-sdk/definitions.json' with { type: 'json' }
+// import definition from 'backendless-console-sdk/definitions.json' with { type: 'json' }
+import { testDef } from './testdef.js'
 
 const preparedTools = []
 
-definition.forEach(service => {
+testDef.forEach(service => {
   const { serviceName } = service.serviceInfo
 
   service.methods.forEach(method => {
