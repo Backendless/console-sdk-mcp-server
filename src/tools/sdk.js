@@ -26,7 +26,7 @@ function createTool(service, method) {
     _meta          : { category }, // we also can add components, etc. just for FR.
     execution      : async (args, sessionId, meta) => {
       const sdkClient = provideSDKClientSession(sessionId, meta)
-      const sdkMethod = sdkClient[serviceName]?.[toolName]?.bind(sdkClient[serviceName])
+      const sdkMethod = sdkClient[serviceName]?.[toolName]
 
       if (typeof sdkMethod !== 'function') {
         throw new Error(`Tool ${ toolName } not found for service ${ serviceName }`)
