@@ -1,7 +1,6 @@
 import { buildDescription, paramsToZodSchema } from './composer.js'
 import { provideSDKClientSession } from '../console-sdk/index.js'
 
-
 async function loadDefinitions() {
   try {
     const { default: definitions } = await import('backendless-console-sdk/definitions.json', { with: { type: 'json' } })

@@ -5,7 +5,7 @@ import express from 'express'
 import cors from 'cors'
 
 import { initMCPServer } from './server.js'
-import { handleOAuthServerMetadata } from './auth/index.js'
+import { handleOAuthServerMetadata, handleOAuthProtectedResource } from './auth/index.js'
 
 const transports = {}
 
@@ -25,16 +25,7 @@ export async function startHTTP({ port }) {
 
   app.use(express.json())
 
-  app.get('/.well-known/oauth-protected-resource', (req, res) => {
-    res.json({
-      resource_server: 'localhost:3003', // todo change it with proxy to blConsoleURL
-      scopes_supported: [],
-      bearer_methods_supported: ["header"],
-      resource_documentation: "MCP Server OAuth Protected Resource",
-      mcp_endpoint: `http://localhost:${port}/mcp` // todo change it with proxy to blConsoleURL
-    })
-  })
-
+  app.get('/.well-known/oauth-protected-resource', handleOAuthProtectedResource)
   app.get('/.well-known/oauth-authorization-server', handleOAuthServerMetadata)
 
   app.post('/mcp', requireAuth(), async (req, res) => {
@@ -64,12 +55,9 @@ export async function startHTTP({ port }) {
         }
       }
 
-      // ... set up server resources, tools, and prompts ...
 
-      // Connect to the MCP server
       await macServer.connect(transport)
     } else {
-      // Invalid request
       res.status(400).json({
         jsonrpc: '2.0',
         error  : {
@@ -81,11 +69,9 @@ export async function startHTTP({ port }) {
       return
     }
 
-    // Handle the request
     await transport.handleRequest(req, res, req.body)
   })
 
-// Reusable handler for GET and DELETE requests
   const handleSessionRequest = async (req, res) => {
     const sessionId = req.headers['mcp-session-id']
 
@@ -98,16 +84,16 @@ export async function startHTTP({ port }) {
     await transport.handleRequest(req, res)
   }
 
-// Handle DELETE requests for session termination
   app.delete('/mcp', requireAuth(), handleSessionRequest)
 
   function requireAuth() {
     return (req, res, next) => {
       const authKeyHeader = req.headers['authkey']
-      const authorizationHeader = req.headers['authorization']
+      const bearerToken = req.headers['authorization']?.split(' ')[1]
 
-      if (!authKeyHeader && !authorizationHeader) {
-        res.set('WWW-Authenticate', `Bearer resource_metadata="http://localhost:3003/.well-known/oauth-protected-resource"`)
+      if (!authKeyHeader && !bearerToken) {
+        res.set('WWW-Authenticate', `Bearer resource_metadata="http://localhost:${ port }/.well-known/oauth-protected-resource"`)
+        // todo change it with proxy to blConsoleURL
 
         if (req.method === 'POST') {
           res.status(401).json({

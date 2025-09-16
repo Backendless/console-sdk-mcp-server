@@ -1,6 +1,5 @@
 export async function registerTools(mcpServer) {
   const tools = [
-    // ...(await import('./session-example.js')).default,
     ...(await import('./sdk.js')).default,
   ]
 

@@ -20,8 +20,7 @@ function generateOAuthConfig() {
     ],
     'token_endpoint_auth_methods_supported': [
       'client_secret_basic',
-      // 'client_secret_post',
-      // 'none'
+      // 'none' // todo add after FR-1932
     ],
     'code_challenge_methods_supported'     : [
       'plain',
@@ -41,6 +40,25 @@ export function handleOAuthServerMetadata(req, res) {
     console.error('Error generating OAuth config:', error)
 
     res.status(500).json({ error: 'OAuth configuration not available' })
+  }
+}
+
+export function handleOAuthProtectedResource(req, res) {
+  try {
+    res.setHeader('Content-Type', 'application/json')
+
+    // todo change it with proxy to blConsoleURL
+    res.json({
+      resource_server: `localhost:3003`,
+      scopes_supported: [],
+      bearer_methods_supported: ['header'],
+      resource_documentation: 'MCP Server OAuth Protected Resource',
+      mcp_endpoint: `http://localhost:3003/mcp`
+    })
+  } catch (error) {
+    console.error('Error generating OAuth protected resource config:', error)
+
+    res.status(500).json({ error: 'OAuth protected resource configuration not available' })
   }
 }
 
