@@ -1,19 +1,15 @@
-import { Config } from '../config.js'
-
-function generateOAuthConfig() {
-  const blConsoleURL = Config.blConsoleURL
-
+const generateOAuthConfig = consoleURL => {
   return {
-    'issuer'                               : blConsoleURL,
-    'authorization_endpoint'               : `${ blConsoleURL }/developer/oauth2/authorize`,
-    'token_endpoint'                       : `${ blConsoleURL }/developer/oauth2/token`,
-    'registration_endpoint'                : `${ blConsoleURL }/developer/oauth2/client/register`,
-    'revocation_endpoint'                  : `${ blConsoleURL }/developer/oauth2/token/revoke`,
+    'issuer'                               : consoleURL,
+    'authorization_endpoint'               : `${ consoleURL }/developer/oauth2/mcp-authorize`,
+    'token_endpoint'                       : `${ consoleURL }/developer/oauth2/token`,
+    'registration_endpoint'                : `${ consoleURL }/developer/oauth2/client/register`,
+    'revocation_endpoint'                  : `${ consoleURL }/developer/oauth2/token/revoke`,
     'response_types_supported'             : [
-      'code'
+      'code',
     ],
     'response_modes_supported'             : [
-      'query'
+      'query',
     ],
     'grant_types_supported'                : [
       'authorization_code',
@@ -24,36 +20,38 @@ function generateOAuthConfig() {
     ],
     'code_challenge_methods_supported'     : [
       'plain',
-      'S256'
+      'S256',
     ],
     // 'scopes_supported'                     : [],
   }
 }
 
-export function handleOAuthServerMetadata(req, res) {
-  try {
-    const config = generateOAuthConfig()
+export const handleOAuthServerMetadata = consoleURL => {
+  const config = generateOAuthConfig(consoleURL)
 
-    res.setHeader('Content-Type', 'application/json')
-    res.json(config)
-  } catch (error) {
-    console.error('Error generating OAuth config:', error)
+  return (req, res) => {
+    try {
+      res.setHeader('Content-Type', 'application/json')
+      res.json(config)
+    } catch (error) {
+      console.error('Error generating OAuth config:', error)
 
-    res.status(500).json({ error: 'OAuth configuration not available' })
+      res.status(500).json({ error: 'OAuth configuration not available' })
+    }
   }
 }
 
-export function handleOAuthProtectedResource(req, res) {
+export const handleOAuthProtectedResource = (resource_server, mcp_endpoint) => (req, res) => {
   try {
     res.setHeader('Content-Type', 'application/json')
 
     // todo change it with proxy to blConsoleURL
     res.json({
-      resource_server: `localhost:3003`,
-      scopes_supported: [],
+      resource_server,
+      mcp_endpoint,
+      scopes_supported        : [],
       bearer_methods_supported: ['header'],
-      resource_documentation: 'MCP Server OAuth Protected Resource',
-      mcp_endpoint: `http://localhost:3003/mcp`
+      resource_documentation  : 'MCP Server OAuth Protected Resource',
     })
   } catch (error) {
     console.error('Error generating OAuth protected resource config:', error)
@@ -61,5 +59,3 @@ export function handleOAuthProtectedResource(req, res) {
     res.status(500).json({ error: 'OAuth protected resource configuration not available' })
   }
 }
-
-export { generateOAuthConfig }

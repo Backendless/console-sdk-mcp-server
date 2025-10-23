@@ -45,13 +45,7 @@ function convertParamToSchema(param) {
 }
 
 export function buildDescription(description, toolName, serviceName, sampleResult) {
-  let desc = description
-
-  if (sampleResult) {
-    desc += `\n\nExample result: ${sampleResult}`
-  }
-
-  return desc || `Execute ${toolName} from ${serviceName}`
+  return description || `Execute ${toolName} from ${serviceName}`
 }
 
 export function paramsToZodSchema(params) {
