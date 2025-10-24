@@ -110,27 +110,29 @@ export async function getExpressEndpoints({ protocol, hostname, port, pathname, 
     res.status(404).send('Not Found')
   }
 
+  const wellKnownOauthProtectedResource=[
+    '/.well-known/oauth-protected-resource',
+    '/.well-known/oauth-protected-resource/mcp',
+    '/mcp/.well-known/oauth-protected-resource',
+  ].map(route=>({
+    method  : 'get',
+    route,
+    handlers: [handleOAuthProtectedResource(resource_server, mcp_endpoint)],
+  }))
+
+  const wellKnownOauthAuthorizationServer=[
+    '/.well-known/oauth-authorization-server',
+    '/.well-known/oauth-authorization-server/mcp',
+    '/mcp/.well-known/oauth-authorization-server',
+  ].map(route=>({
+    method  : 'get',
+    route   ,
+    handlers: [handleOAuthServerMetadata(consoleURL)],
+  }))
+
   return [
-    {
-      method  : 'get',
-      route   : '/.well-known/oauth-protected-resource',
-      handlers: [handleOAuthProtectedResource(resource_server, mcp_endpoint)],
-    },
-    {
-      method  : 'get',
-      route   : '/.well-known/oauth-protected-resource/mcp',
-      handlers: [handleOAuthProtectedResource(resource_server, mcp_endpoint)],
-    },
-    {
-      method  : 'get',
-      route   : '/.well-known/oauth-authorization-server',
-      handlers: [handleOAuthServerMetadata(consoleURL)],
-    },
-    {
-      method  : 'get',
-      route   : '/.well-known/oauth-authorization-server/mcp',
-      handlers: [handleOAuthServerMetadata(consoleURL)],
-    },
+    ...wellKnownOauthProtectedResource,
+    ...wellKnownOauthAuthorizationServer,
     {
       method  : 'get',
       route   : url.pathname,

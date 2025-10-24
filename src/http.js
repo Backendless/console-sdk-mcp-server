@@ -9,12 +9,17 @@ export async function startHTTP({ port }) {
 
   const app = express()
 
-  app.use(cors())
+  app.use(cors({
+    origin:'*',
+    exposedHeaders: ['Mcp-Session-Id'],
+    allowedHeaders: ['Content-Type', 'mcp-session-id', 'authorization', 'authKey', 'mcp-protocol-version', 'cache-control', 'pragma'],
+  }))
+
   app.use(express.json())
 
   const endpoints = await getExpressEndpoints({
     protocol  : 'http',
-    hostname      : 'localhost',
+    hostname  : 'localhost',
     port,
     pathname  : '/mcp',
     consoleURL: Config.blConsoleURL,
