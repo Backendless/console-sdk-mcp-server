@@ -12,23 +12,28 @@ async function loadDefinitions() {
   }
 }
 
+function normalizeToolName(methodLabel) {
+  return methodLabel.replace(/\s/g, '_')
+}
+
 function createTool(service, method) {
   const { serviceName } = service.serviceInfo
-  const { methodLabel: toolLabel, methodName: toolName, category, description, params, sampleResult } = method
+  const { methodLabel, methodName, category, description, params } = method
 
-  const enhancedDescription = buildDescription(description, toolName, serviceName, sampleResult)
+  const toolName = normalizeToolName(methodLabel)
+  const toolDescription = buildDescription(description, methodName, serviceName)
 
   return {
-    name           : toolLabel,
-    description    : enhancedDescription,
+    name           : toolName,
+    description    : toolDescription,
     argumentsSchema: paramsToZodSchema(params),
     _meta          : { category }, // we also can add components, etc. just for FR.
     execution      : async (args, sessionId, meta) => {
       const sdkClient = provideSDKClientSession(sessionId, meta)
-      const sdkMethod = sdkClient[serviceName]?.[toolName]
+      const sdkMethod = sdkClient[serviceName]?.[methodName]
 
       if (typeof sdkMethod !== 'function') {
-        throw new Error(`Tool ${ toolName } not found for service ${ serviceName }`)
+        throw new Error(`SDK method "${ methodName }" not found for service ${ serviceName }`)
       }
 
       const methodParams = params || []
@@ -36,7 +41,7 @@ function createTool(service, method) {
       const result = await sdkMethod(...argsArray)
 
       return JSON.stringify(result)
-    }
+    },
   }
 }
 

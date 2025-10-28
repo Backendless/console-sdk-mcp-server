@@ -1,6 +1,6 @@
 {
   "name": "backendless-console-sdk-mcp-server",
-  "version": "0.0.1",
+  "version": "0.0.10",
   "description": "A Model Context Protocol (MCP) server implementation for Backendless Console SDK, providing AI-powered tools for managing and interacting with Backendless data.",
   "main": "src/server.js",
   "type": "module",

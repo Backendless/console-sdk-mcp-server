@@ -1,28 +1,29 @@
 const generateOAuthConfig = consoleURL => {
   return {
-    'issuer'                               : consoleURL,
-    'authorization_endpoint'               : `${ consoleURL }/developer/oauth2/mcp-authorize`,
-    'token_endpoint'                       : `${ consoleURL }/developer/oauth2/token`,
-    'registration_endpoint'                : `${ consoleURL }/developer/oauth2/client/register`,
-    'revocation_endpoint'                  : `${ consoleURL }/developer/oauth2/token/revoke`,
-    'response_types_supported'             : [
+    issuer                               : consoleURL,
+    authorization_endpoint               : `${ consoleURL }/developer/oauth2/mcp-authorize`,
+    token_endpoint                       : `${ consoleURL }/developer/oauth2/token`,
+    registration_endpoint                : `${ consoleURL }/developer/oauth2/client/register`,
+    revocation_endpoint                  : `${ consoleURL }/developer/oauth2/token/revoke`,
+    scopes_supported                     : [],
+    response_types_supported             : [
       'code',
     ],
-    'response_modes_supported'             : [
+    response_modes_supported             : [
       'query',
     ],
-    'grant_types_supported'                : [
+    grant_types_supported                : [
       'authorization_code',
+      'refresh_token',
     ],
-    'token_endpoint_auth_methods_supported': [
+    token_endpoint_auth_methods_supported: [
       'client_secret_basic',
-      // 'none' // todo add after FR-1932
+      'none',
     ],
-    'code_challenge_methods_supported'     : [
+    code_challenge_methods_supported     : [
       'plain',
       'S256',
     ],
-    // 'scopes_supported'                     : [],
   }
 }
 
@@ -41,17 +42,24 @@ export const handleOAuthServerMetadata = consoleURL => {
   }
 }
 
-export const handleOAuthProtectedResource = (resource_server, mcp_endpoint) => (req, res) => {
+export const handleOAuthProtectedResource = (consoleURL, resource_server, mcp_endpoint) => (req, res) => {
   try {
     res.setHeader('Content-Type', 'application/json')
 
     // todo change it with proxy to blConsoleURL
     res.json({
-      resource_server,
-      mcp_endpoint,
+      resource                : consoleURL,
+      resource_name           : 'Backendless MCP (Beta)',
+      resource_documentation  : 'https://backendless.com/docs',
+      authorization_servers   : [
+        consoleURL,
+      ],
+      bearer_methods_supported: [
+        'header',
+      ],
       scopes_supported        : [],
-      bearer_methods_supported: ['header'],
-      resource_documentation  : 'MCP Server OAuth Protected Resource',
+      resource_server         : consoleURL,
+      mcp_endpoint            : consoleURL,
     })
   } catch (error) {
     console.error('Error generating OAuth protected resource config:', error)

@@ -84,17 +84,13 @@ export async function getExpressEndpoints({ protocol, hostname, port, pathname, 
       const bearerToken = req.headers['authorization']?.split(' ')[1]
 
       if (!authKeyHeader && !bearerToken) {
-        res.set('WWW-Authenticate', `Bearer resource_metadata="${ url.protocol }//${ url.host }/.well-known/oauth-protected-resource"`)
+        res.set('WWW-Authenticate', `Bearer realm="OAuth", resource_metadata="${ url.protocol }//${ url.host }/.well-known/oauth-protected-resource", error="invalid_token", error_description="Missing or invalid access token"`)
         // todo change it with proxy to blConsoleURL
 
         if (req.method === 'POST') {
           res.status(401).json({
-            jsonrpc: '2.0',
-            error  : {
-              code   : -32001,
-              message: 'Authentication required. Use "authkey" header for Backendless authKey or Authorization: Bearer token for OAuth',
-            },
-            id     : null,
+            'error': 'invalid_token',
+            'error_description': 'Missing or invalid access token'
           })
         } else {
           res.status(401).send('Authentication required')
@@ -110,23 +106,23 @@ export async function getExpressEndpoints({ protocol, hostname, port, pathname, 
     res.status(404).send('Not Found')
   }
 
-  const wellKnownOauthProtectedResource=[
+  const wellKnownOauthProtectedResource = [
     '/.well-known/oauth-protected-resource',
     '/.well-known/oauth-protected-resource/mcp',
     '/mcp/.well-known/oauth-protected-resource',
-  ].map(route=>({
+  ].map(route => ({
     method  : 'get',
     route,
-    handlers: [handleOAuthProtectedResource(resource_server, mcp_endpoint)],
+    handlers: [handleOAuthProtectedResource(consoleURL, resource_server, mcp_endpoint)],
   }))
 
-  const wellKnownOauthAuthorizationServer=[
+  const wellKnownOauthAuthorizationServer = [
     '/.well-known/oauth-authorization-server',
     '/.well-known/oauth-authorization-server/mcp',
     '/mcp/.well-known/oauth-authorization-server',
-  ].map(route=>({
+  ].map(route => ({
     method  : 'get',
-    route   ,
+    route,
     handlers: [handleOAuthServerMetadata(consoleURL)],
   }))
 

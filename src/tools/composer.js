@@ -44,7 +44,7 @@ function convertParamToSchema(param) {
   return schema
 }
 
-export function buildDescription(description, toolName, serviceName, sampleResult) {
+export function buildDescription(description, toolName, serviceName) {
   return description || `Execute ${toolName} from ${serviceName}`
 }
 
