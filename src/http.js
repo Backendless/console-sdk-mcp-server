@@ -1,98 +1,33 @@
-import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js'
-import { isInitializeRequest } from '@modelcontextprotocol/sdk/types.js'
-import crypto from 'crypto'
 import express from 'express'
 import cors from 'cors'
 
-import { initMCPServer } from './server.js'
-
-const transports = {}
+import { getExpressEndpoints } from './express-endpoints.js'
+import { Config } from './config.js'
 
 export async function startHTTP({ port }) {
-  port = port || 3000
-
-  const macServer = await initMCPServer()
+  port = port || 3003
 
   const app = express()
 
   app.use(cors({
-    origin: '*', // Configure appropriately for production, for example:
-    // origin: ['https://your-remote-domain.com', 'https://your-other-remote-domain.com'],
+    origin:'*',
     exposedHeaders: ['Mcp-Session-Id'],
-    allowedHeaders: ['Content-Type', 'mcp-session-id'],
+    allowedHeaders: ['Content-Type', 'mcp-session-id', 'authorization', 'authKey', 'mcp-protocol-version', 'cache-control', 'pragma'],
   }))
 
   app.use(express.json())
 
-// Handle POST requests for client-to-server communication
-  app.post('/mcp', async (req, res) => {
-    // Check for existing session ID
-    const sessionId = req.headers['mcp-session-id']
-    let transport
-
-    if (sessionId && transports[sessionId]) {
-      // Reuse existing transport
-      transport = transports[sessionId]
-    } else if (!sessionId && isInitializeRequest(req.body)) {
-      // New initialization request
-      transport = new StreamableHTTPServerTransport({
-        sessionIdGenerator  : () => crypto.randomUUID(),
-        onsessioninitialized: (sessionId) => {
-          // Store the transport by session ID
-          transports[sessionId] = transport
-        },
-        // DNS rebinding protection is disabled by default for backwards compatibility. If you are running this server
-        // locally, make sure to set:
-        // enableDnsRebindingProtection: true,
-        // allowedHosts: ['127.0.0.1'],
-      })
-
-      // Clean up transport when closed
-      transport.onclose = () => {
-        if (transport.sessionId) {
-          delete transports[transport.sessionId]
-        }
-      }
-
-      // ... set up server resources, tools, and prompts ...
-
-      // Connect to the MCP server
-      await macServer.connect(transport)
-    } else {
-      // Invalid request
-      res.status(400).json({
-        jsonrpc: '2.0',
-        error  : {
-          code   : -32000,
-          message: 'Bad Request: No valid session ID provided',
-        },
-        id     : null,
-      })
-      return
-    }
-
-    // Handle the request
-    await transport.handleRequest(req, res, req.body)
+  const endpoints = await getExpressEndpoints({
+    protocol  : 'http',
+    hostname  : 'localhost',
+    port,
+    pathname  : '/mcp',
+    consoleURL: Config.blConsoleURL,
   })
 
-// Reusable handler for GET and DELETE requests
-  const handleSessionRequest = async (req, res) => {
-    const sessionId = req.headers['mcp-session-id']
-
-    if (!sessionId || !transports[sessionId]) {
-      res.status(400).send('Invalid or missing session ID')
-      return
-    }
-
-    const transport = transports[sessionId]
-    await transport.handleRequest(req, res)
-  }
-
-// Handle GET requests for server-to-client notifications via SSE
-  app.get('/mcp', handleSessionRequest)
-
-// Handle DELETE requests for session termination
-  app.delete('/mcp', handleSessionRequest)
+  endpoints.forEach(({ method, route, handlers }) => {
+    app[method](route, ...handlers)
+  })
 
   app.listen(port, () => {
     console.log(`🚀 Streamable MCP server running at http://localhost:${ port }/mcp`)
