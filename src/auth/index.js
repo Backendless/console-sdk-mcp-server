@@ -1,9 +1,9 @@
 const generateOAuthConfig = consoleURL => {
   return {
     issuer                               : consoleURL,
-    authorization_endpoint               : `${ consoleURL }/developer/oauth2/mcp-authorize`,
+    authorization_endpoint               : `${ consoleURL }/developer/oauth2/authorize`,
     token_endpoint                       : `${ consoleURL }/developer/oauth2/token`,
-    registration_endpoint                : `${ consoleURL }/developer/oauth2/client/register`,
+    registration_endpoint                : `${ consoleURL }/developer/oauth2/client/mcp-register`,
     revocation_endpoint                  : `${ consoleURL }/developer/oauth2/token/revoke`,
     scopes_supported                     : [],
     response_types_supported             : [
